@@ -5,7 +5,7 @@ import Board from './Board';
 const SolutionDisplay = ({ solution, board, vehicles, primaryPiece, exitPoint, onAnimate }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [animationSpeed, setAnimationSpeed] = useState(500); // ms per step
+  const [animationSpeed, setAnimationSpeed] = useState(500); 
   
   if (!solution || solution.length === 0) {
     return null;
@@ -41,10 +41,10 @@ const SolutionDisplay = ({ solution, board, vehicles, primaryPiece, exitPoint, o
   };
 
   const handleSpeedChange = (e) => {
-    setAnimationSpeed(1000 - e.target.value); // Invert the slider value
+    setAnimationSpeed(1000 - e.target.value); 
   };
 
-  const totalMoves = solution.length - 1; // Exclude initial state
+  const totalMoves = solution.length - 1;
   
   return (
     <div className="solution-display">
