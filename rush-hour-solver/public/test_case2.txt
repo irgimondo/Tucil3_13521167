@@ -1,0 +1,8 @@
+6 6
+9
+AABB..
+..CC..
+PPDD..
+EE.FGK
+...FG.
+...HHH

@@ -1,0 +1,127 @@
+.solution-display {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  min-width: 320px;
+  max-width: 500px;
+}
+
+.solution-display h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  color: #333;
+}
+
+.solution-display h3 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.solution-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.solution-info p {
+  margin: 5px 0;
+}
+
+.animation-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.animation-button {
+  padding: 8px 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.animation-button:hover {
+  background-color: #388e3c;
+}
+
+.animation-button.stop {
+  background-color: #f44336;
+}
+
+.animation-button.stop:hover {
+  background-color: #d32f2f;
+}
+
+.animation-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.speed-control input {
+  width: 100px;
+}
+
+.solution-board {
+  margin-bottom: 20px;
+}
+
+.steps-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eeeeee;
+  border-radius: 4px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eeeeee;
+  font-size: 14px;
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step-number {
+  background-color: #eeeeee;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+}
+
+.current-step {
+  background-color: #e8f5e9;
+}
+
+.current-step .step-number {
+  background-color: #4caf50;
+  color: white;
+}
