@@ -51,6 +51,7 @@ The input file must adhere to the following format:
 A B
 N
 board_configuration
+K_position
 ```
 
 Where:
@@ -58,9 +59,9 @@ Where:
 - **N**: Number of non-primary pieces
 - **board_configuration**: The puzzle layout where:
   - **P**: Primary piece
-  - **K**: Exit point
   - **.**: Empty cell
   - **Letters**: Other vehicles
+- **K_position**: Position of the exit marker 'K' which must be outside the grid
 
 ### Example
 
@@ -69,11 +70,24 @@ Where:
 11
 AAB..F
 ..BCDF
-GPPCDFK
+GPPCDF
 GH.III
 GHJ...
 LLJMM.
+K
 ```
+
+In this example:
+- The board is 6×6
+- There are 11 vehicles (including the primary piece 'P')
+- The exit point 'K' is placed to the left of the grid, aligned with the third row
+- The primary piece 'P' is positioned horizontally in the third row
+
+The exit point ('K') can be placed:
+- At the left of a row (like in the example)
+- At the right of a row (e.g., "AABB.." followed by "K" on the same line)
+- Above a column (e.g., "K" placed above the grid, aligned with a column)
+- Below a column (e.g., "K" placed below the grid, aligned with a column)
 
 ## Algorithms Implementation
 

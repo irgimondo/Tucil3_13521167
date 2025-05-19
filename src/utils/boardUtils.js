@@ -201,12 +201,45 @@ export const makeMove = (state, vehicle, direction) => {
  * @returns {boolean} True if puzzle is solved, false otherwise
  */
 export const isSolved = (state) => {
-  const { primaryPiece, exitPoint } = state;
+  const { primaryPiece, exitPoint, board } = state;
   
-  // Check if any part of the primary piece is at the exit
-  return primaryPiece.positions.some(pos => {
-    return pos.row === exitPoint.row && pos.col === exitPoint.col;
-  });
+  // For horizontal primary piece
+  if (primaryPiece.orientation === 'horizontal') {
+    // Get the rightmost position of the primary piece
+    const rightmost = primaryPiece.positions.reduce((max, pos) => {
+      return pos.col > max.col ? pos : max;
+    }, primaryPiece.positions[0]);
+    
+    // If exit is on the right edge, check if primary piece is adjacent to it
+    if (exitPoint.col === board[0].length - 1 && rightmost.col === board[0].length - 1) {
+      return true;
+    }
+    
+    // If exit is on the left edge, check if primary piece is adjacent to it
+    if (exitPoint.col === 0 && primaryPiece.positions.some(pos => pos.col === 0)) {
+      return true;
+    }
+  }
+  
+  // For vertical primary piece
+  if (primaryPiece.orientation === 'vertical') {
+    // Get the bottommost position of the primary piece
+    const bottommost = primaryPiece.positions.reduce((max, pos) => {
+      return pos.row > max.row ? pos : max;
+    }, primaryPiece.positions[0]);
+    
+    // If exit is on the bottom edge, check if primary piece is adjacent to it
+    if (exitPoint.row === board.length - 1 && bottommost.row === board.length - 1) {
+      return true;
+    }
+    
+    // If exit is on the top edge, check if primary piece is adjacent to it
+    if (exitPoint.row === 0 && primaryPiece.positions.some(pos => pos.row === 0)) {
+      return true;
+    }
+  }
+  
+  return false;
 };
 
 /**
@@ -225,23 +258,44 @@ export const manhattanDistance = (position, target) => {
  * @returns {number} Distance to exit
  */
 export const distanceToExit = (state) => {
-  const { primaryPiece, exitPoint } = state;
+  const { primaryPiece, exitPoint, board } = state;
   
-  // For horizontal primary pieces, use the rightmost position
+  // For horizontal primary pieces
   if (primaryPiece.orientation === 'horizontal') {
     const rightmost = primaryPiece.positions.reduce((max, pos) => {
       return pos.col > max.col ? pos : max;
     }, primaryPiece.positions[0]);
     
-    return manhattanDistance(rightmost, exitPoint);
+    // If exit is on the right
+    if (exitPoint.col === board[0].length - 1) {
+      return Math.max(0, board[0].length - 1 - rightmost.col);
+    }
+    
+    // If exit is on the left
+    if (exitPoint.col === 0) {
+      return primaryPiece.positions[0].col;
+    }
   }
   
-  // For vertical primary pieces, use the bottommost position
-  const bottommost = primaryPiece.positions.reduce((max, pos) => {
-    return pos.row > max.row ? pos : max;
-  }, primaryPiece.positions[0]);
+  // For vertical primary pieces
+  if (primaryPiece.orientation === 'vertical') {
+    const bottommost = primaryPiece.positions.reduce((max, pos) => {
+      return pos.row > max.row ? pos : max;
+    }, primaryPiece.positions[0]);
+    
+    // If exit is on the bottom
+    if (exitPoint.row === board.length - 1) {
+      return Math.max(0, board.length - 1 - bottommost.row);
+    }
+    
+    // If exit is on the top
+    if (exitPoint.row === 0) {
+      return primaryPiece.positions[0].row;
+    }
+  }
   
-  return manhattanDistance(bottommost, exitPoint);
+  // If we get here, something is wrong with the exit point configuration
+  return 999; // Return a large number as a fallback
 };
 
 /**
@@ -255,47 +309,97 @@ export const countBlockingVehicles = (state) => {
   let count = 0;
   
   if (primaryPiece.orientation === 'horizontal') {
-    // For horizontal primary pieces, check all cells between the rightmost position and the exit
+    // For horizontal primary pieces, check all cells between the primary piece and the edge
     const rightmost = primaryPiece.positions.reduce((max, pos) => {
       return pos.col > max.col ? pos : max;
     }, primaryPiece.positions[0]);
     
+    const leftmost = primaryPiece.positions.reduce((min, pos) => {
+      return pos.col < min.col ? pos : min;
+    }, primaryPiece.positions[0]);
+    
     const row = rightmost.row;
-    const startCol = rightmost.col + 1;
-    const endCol = exitPoint.col;
     
-    // Count unique vehicles in the path
-    const blockers = new Set();
-    for (let col = startCol; col <= endCol; col++) {
-      if (col >= board[0].length) continue;
-      const cell = board[row][col];
-      if (cell !== '.' && cell !== 'P') {
-        blockers.add(cell);
+    // If exit is on the right edge
+    if (exitPoint.col === board[0].length - 1) {
+      const startCol = rightmost.col + 1;
+      const endCol = board[0].length - 1;
+      
+      // Count unique vehicles in the path
+      const blockers = new Set();
+      for (let col = startCol; col <= endCol; col++) {
+        if (col >= board[0].length) continue;
+        const cell = board[row][col];
+        if (cell !== '.' && cell !== 'P') {
+          blockers.add(cell);
+        }
       }
+      
+      count = blockers.size;
+    } 
+    // If exit is on the left edge
+    else if (exitPoint.col === 0) {
+      const startCol = 0;
+      const endCol = leftmost.col - 1;
+      
+      // Count unique vehicles in the path
+      const blockers = new Set();
+      for (let col = startCol; col <= endCol; col++) {
+        if (col < 0) continue;
+        const cell = board[row][col];
+        if (cell !== '.' && cell !== 'P') {
+          blockers.add(cell);
+        }
+      }
+      
+      count = blockers.size;
     }
-    
-    count = blockers.size;
   } else {
-    // For vertical primary pieces, check all cells between the bottommost position and the exit
+    // For vertical primary pieces, check all cells between the primary piece and the edge
     const bottommost = primaryPiece.positions.reduce((max, pos) => {
       return pos.row > max.row ? pos : max;
     }, primaryPiece.positions[0]);
     
+    const topmost = primaryPiece.positions.reduce((min, pos) => {
+      return pos.row < min.row ? pos : min;
+    }, primaryPiece.positions[0]);
+    
     const col = bottommost.col;
-    const startRow = bottommost.row + 1;
-    const endRow = exitPoint.row;
     
-    // Count unique vehicles in the path
-    const blockers = new Set();
-    for (let row = startRow; row <= endRow; row++) {
-      if (row >= board.length) continue;
-      const cell = board[row][col];
-      if (cell !== '.' && cell !== 'P') {
-        blockers.add(cell);
+    // If exit is on the bottom edge
+    if (exitPoint.row === board.length - 1) {
+      const startRow = bottommost.row + 1;
+      const endRow = board.length - 1;
+      
+      // Count unique vehicles in the path
+      const blockers = new Set();
+      for (let row = startRow; row <= endRow; row++) {
+        if (row >= board.length) continue;
+        const cell = board[row][col];
+        if (cell !== '.' && cell !== 'P') {
+          blockers.add(cell);
+        }
       }
+      
+      count = blockers.size;
+    } 
+    // If exit is on the top edge
+    else if (exitPoint.row === 0) {
+      const startRow = 0;
+      const endRow = topmost.row - 1;
+      
+      // Count unique vehicles in the path
+      const blockers = new Set();
+      for (let row = startRow; row <= endRow; row++) {
+        if (row < 0) continue;
+        const cell = board[row][col];
+        if (cell !== '.' && cell !== 'P') {
+          blockers.add(cell);
+        }
+      }
+      
+      count = blockers.size;
     }
-    
-    count = blockers.size;
   }
   
   return count;

@@ -20,44 +20,72 @@ export const parseInput = (inputText) => {
     const vehiclePositions = new Map(); 
     let primaryPiece = null;
     let exitPoint = null;
-    
-    for (let i = 0; i < rows; i++) {
+      // Look for 'K' in all rows to find the exit point
+    for (let i = 0; i < rows + 2; i++) {  // +2 to check one row above and below the board
+      if (i + 2 >= lines.length) continue;  // Skip if line doesn't exist
+      
       const rowLine = lines[i + 2].trim();
+      let rowToAdd = rowLine;
       
-      if (rowLine.length !== cols) {
-        throw new Error(`Row ${i + 1} has invalid length (expected ${cols}, got ${rowLine.length})`);
-      }
-      
-      const row = rowLine.split('');
-      board.push(row);
-      
-      for (let j = 0; j < cols; j++) {
-        const cell = row[j];
-        
-        if (cell === '.') continue;
-        
-        if (cell === 'K') {
+      // If this is within the actual grid rows (not extra row for K)
+      if (i < rows) {
+        // Check if K is at the beginning or end of the row (indicating it's outside)
+        if (rowLine.startsWith('K')) {
           if (exitPoint !== null) {
             throw new Error('Multiple exit points found');
           }
-          exitPoint = { row: i, col: j };
-
-          row[j] = '.';
-          continue;
-        }
-        
-        if (cell === 'P') {
-          if (!vehiclePositions.has('P')) {
-            vehiclePositions.set('P', []);
+          exitPoint = { row: i, col: -1 };  // -1 indicates left of the grid
+          rowToAdd = rowLine.substring(1);  // Remove K from the row
+        } else if (rowLine.endsWith('K')) {
+          if (exitPoint !== null) {
+            throw new Error('Multiple exit points found');
           }
-          vehiclePositions.get('P').push({ row: i, col: j });
-          continue;
+          exitPoint = { row: i, col: cols };  // cols indicates right of the grid
+          rowToAdd = rowLine.substring(0, rowLine.length - 1);  // Remove K from the row
         }
         
-        if (!vehiclePositions.has(cell)) {
-          vehiclePositions.set(cell, []);
+        // Check if the row has the right length after possibly removing K
+        if (rowToAdd.length !== cols) {
+          throw new Error(`Row ${i + 1} has invalid length (expected ${cols}, got ${rowToAdd.length})`);
         }
-        vehiclePositions.get(cell).push({ row: i, col: j });
+        
+        const row = rowToAdd.split('');
+        board.push(row);
+        
+        // Process each cell in the regular grid
+        for (let j = 0; j < cols; j++) {
+          const cell = row[j];
+          
+          if (cell === '.') continue;
+          
+          // Check for K inside the grid (should not happen with new format)
+          if (cell === 'K') {
+            throw new Error('Exit point (K) should be outside the grid, not inside');
+          }          if (cell === 'P') {
+            if (!vehiclePositions.has('P')) {
+              vehiclePositions.set('P', []);
+            }
+            vehiclePositions.get('P').push({ row: i, col: j });
+            continue;
+          }
+          
+          if (!vehiclePositions.has(cell)) {
+            vehiclePositions.set(cell, []);
+          }
+          vehiclePositions.get(cell).push({ row: i, col: j });
+        }
+      } else {
+        // This is a row outside the grid (above or below)
+        // Check if it contains 'K' to indicate exit at top or bottom
+        const kIndex = rowLine.indexOf('K');
+        if (kIndex !== -1) {
+          if (exitPoint !== null) {
+            throw new Error('Multiple exit points found');
+          }
+          // If i is 0, it's above the grid (row -1), if i is rows, it's below (row = rows)
+          const exitRow = (i < rows) ? -1 : rows;
+          exitPoint = { row: exitRow, col: kIndex };
+        }
       }
     }
     
@@ -102,30 +130,41 @@ export const parseInput = (inputText) => {
         primaryPiece = vehicle;
       }
     }
+      // Verify the exit point is at the edge of the board (or now outside it) and aligned with primary piece
+    const isExitPositionValid = 
+      exitPoint.row === -1 || 
+      exitPoint.row === rows || 
+      exitPoint.col === -1 || 
+      exitPoint.col === cols;
     
-    const isExitAtEdge = 
-      exitPoint.row === 0 || 
-      exitPoint.row === rows - 1 || 
-      exitPoint.col === 0 || 
-      exitPoint.col === cols - 1;
+    if (!isExitPositionValid) {
+      throw new Error('Exit point must be outside the grid (top, bottom, left, or right)');
+    }
     
-    if (!isExitAtEdge) {
-      throw new Error('Exit point must be at the edge of the board');
+    // Determine the actual board cell that connects to the exit
+    let exitCell;
+    if (exitPoint.row === -1) {
+      exitCell = { row: 0, col: exitPoint.col };  // Top edge
+    } else if (exitPoint.row === rows) {
+      exitCell = { row: rows - 1, col: exitPoint.col };  // Bottom edge
+    } else if (exitPoint.col === -1) {
+      exitCell = { row: exitPoint.row, col: 0 };  // Left edge
+    } else if (exitPoint.col === cols) {
+      exitCell = { row: exitPoint.row, col: cols - 1 };  // Right edge
     }
     
     const isExitAlignedWithPrimary = 
-      (primaryPiece.orientation === 'horizontal' && exitPoint.row === primaryPiece.positions[0].row) ||
-      (primaryPiece.orientation === 'vertical' && exitPoint.col === primaryPiece.positions[0].col);
+      (primaryPiece.orientation === 'horizontal' && exitCell.row === primaryPiece.positions[0].row) ||
+      (primaryPiece.orientation === 'vertical' && exitCell.col === primaryPiece.positions[0].col);
     
     if (!isExitAlignedWithPrimary) {
       throw new Error('Exit point must be aligned with the primary piece');
     }
-    
-    return {
+      return {
       board,
       vehicles,
       primaryPiece,
-      exitPoint
+      exitPoint: exitCell  // Return the actual board cell that connects to the exit
     };
   } catch (error) {
     throw new Error(`Error parsing input: ${error.message}`);
