@@ -4,22 +4,24 @@ import Board from './components/Board';
 import Controls from './components/Controls';
 import PuzzleInput from './components/PuzzleInput';
 import SolutionDisplay from './components/SolutionDisplay';
-import { parseInput } from './utils/inputParser';
+import ParserTester from './components/ParserTester';
+import { parseInput } from './utils/puzzleParser';
 import { solveWithUCS } from './algorithms/uniformCostSearch';
 import { solveWithGreedyBestFirst } from './algorithms/greedyBestFirst';
 import { solveWithAStar } from './algorithms/aStarSearch';
 
-function App() {
+function App() { 
   const [board, setBoard] = useState(null);
   const [primaryPiece, setPrimaryPiece] = useState(null);
   const [exitPoint, setExitPoint] = useState(null);
   const [vehicles, setVehicles] = useState([]);
-  const [solution, setSolution] = useState(null);
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState('ucs');
+  const [solution, setSolution] = useState(null);  const [selectedAlgorithm, setSelectedAlgorithm] = useState('ucs');
+  const [selectedHeuristic, setSelectedHeuristic] = useState('distance');
   const [isAnimating, setIsAnimating] = useState(false);
   const [executionTime, setExecutionTime] = useState(null);
   const [nodesVisited, setNodesVisited] = useState(null);
   const [error, setError] = useState(null);
+  const [showParserTest, setShowParserTest] = useState(false);
   
   const fileInputRef = useRef(null);
 
@@ -41,6 +43,7 @@ function App() {
         setVehicles(parsedVehicles);
         setPrimaryPiece(parsedPrimaryPiece);
         setExitPoint(parsedExitPoint);
+        
         setSolution(null);
         setExecutionTime(null);
         setNodesVisited(null);
@@ -54,6 +57,10 @@ function App() {
 
   const handleAlgorithmChange = (algorithm) => {
     setSelectedAlgorithm(algorithm);
+  };
+
+  const handleHeuristicChange = (heuristic) => {
+    setSelectedHeuristic(heuristic);
   };
 
   const solvePuzzle = () => {
@@ -72,22 +79,22 @@ function App() {
         vehicles: vehicles,
         primaryPiece: primaryPiece,
         exitPoint: exitPoint
-      };
-
+      };      
       switch (selectedAlgorithm) {
         case 'ucs':
           result = solveWithUCS(initialState);
           break;
         case 'greedy':
-          result = solveWithGreedyBestFirst(initialState);
+          result = solveWithGreedyBestFirst(initialState, selectedHeuristic);
           break;
         case 'astar':
-          result = solveWithAStar(initialState);
+          result = solveWithAStar(initialState, selectedHeuristic);
           break;
         default:
           result = solveWithUCS(initialState);
       }
 
+      
       const endTime = performance.now();
       setExecutionTime((endTime - startTime).toFixed(2));
       setNodesVisited(result.nodesVisited);
@@ -101,27 +108,48 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Rush Hour Puzzle Solver</h1>
+        <button 
+          onClick={() => setShowParserTest(!showParserTest)} 
+          style={{ padding: '8px 16px' }}
+        >
+          {showParserTest ? 'Hide Parser Tests' : 'Show Parser Tests'}
+        </button>
       </header>
+      
+      {showParserTest && (
+        <div style={{ margin: '20px', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}>
+          <ParserTester />
+        </div>
+      )}
+
       <main className="app-main">
         <div className="app-controls">
           <PuzzleInput 
             onFileUpload={handleFileUpload} 
             fileInputRef={fileInputRef} 
-          />
-          <Controls 
+          />          <Controls 
             onAlgorithmChange={handleAlgorithmChange}
+            onHeuristicChange={handleHeuristicChange}
             onSolve={solvePuzzle}
             selectedAlgorithm={selectedAlgorithm}
+            selectedHeuristic={selectedHeuristic}
             disabled={!board}
-          />
-          {error && <div className="error-message">{error}</div>}
+          />          {error && <div className="error-message">{error}</div>}
           {executionTime && nodesVisited && (
             <div className="metrics">
               <p><strong>Execution Time:</strong> {executionTime} ms</p>
-              <p><strong>Nodes Visited:</strong> {nodesVisited}</p>
+              <p><strong>Nodes Visited:</strong> {nodesVisited}</p>              {selectedAlgorithm !== 'ucs' && (
+                <p><strong>Heuristic Used:</strong> {
+                  selectedHeuristic === 'distance' ? 'Distance to Exit' :
+                  selectedHeuristic === 'blocking' ? 'Blocking Vehicles' :
+                  selectedHeuristic === 'pathComplexity' ? 'Path Complexity' :
+                  'Combined (Distance + Blocking)'
+                }</p>
+              )}
             </div>
           )}
         </div>
+
         <div className="app-board-solution">
           <div className="board-container">
             {board ? (
@@ -139,7 +167,7 @@ function App() {
               </div>
             )}
           </div>
-          
+
           {solution && (
             <SolutionDisplay 
               solution={solution}
@@ -147,7 +175,7 @@ function App() {
               vehicles={vehicles}
               primaryPiece={primaryPiece}
               exitPoint={exitPoint}
-              onAnimate={(isAnimating) => setIsAnimating(isAnimating)}
+              setIsAnimating={setIsAnimating}
             />
           )}
         </div>

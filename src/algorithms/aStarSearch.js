@@ -1,3 +1,4 @@
+
 import {
   boardToString,
   getPossibleMoves,
@@ -7,14 +8,33 @@ import {
   countBlockingVehicles
 } from '../utils/boardUtils';
 
+import {
+  pathComplexity,
+  combinedHeuristic
+} from '../utils/heuristicFunctions';
 
-export const solveWithAStar = (initialState) => {
+const calculateHeuristic = (state, heuristicType) => {
+  switch (heuristicType) {
+    case 'distance':
+      return distanceToExit(state);
+    case 'blocking':
+      return countBlockingVehicles(state);
+    case 'pathComplexity':
+      return pathComplexity(state);
+    case 'combined':
+    default:
+      return combinedHeuristic(state);
+  }
+};
 
+export const solveWithAStar = (initialState, heuristicType = 'combined') => {
+
+  const initialHeuristic = calculateHeuristic(initialState, heuristicType);
   const frontier = [{ 
     state: initialState, 
     cost: 0,  
-    heuristic: distanceToExit(initialState) + countBlockingVehicles(initialState), 
-    f: distanceToExit(initialState) + countBlockingVehicles(initialState) 
+    heuristic: initialHeuristic, 
+    f: initialHeuristic 
   }];
   
   const explored = new Set();
@@ -52,29 +72,25 @@ export const solveWithAStar = (initialState) => {
       
       const tentativeGScore = cost + 1;
       
-      if (!gScore.has(nextStateStr) || tentativeGScore < gScore.get(nextStateStr)) {
+      if (!gScore.has(nextStateStr) || tentativeGScore < gScore.get(nextStateStr)) {       
         cameFrom.set(nextStateStr, state);
-        
         gScore.set(nextStateStr, tentativeGScore);
         
-        const heuristic = distanceToExit(nextState) + countBlockingVehicles(nextState);
-        
+        const heuristic = calculateHeuristic(nextState, heuristicType);
         const f = tentativeGScore + heuristic;
         
-        const inFrontier = frontier.findIndex(item => boardToString(item.state.board) === nextStateStr);
-        
-        if (inFrontier !== -1) {
-
-          if (f < frontier[inFrontier].f) {
-            frontier[inFrontier] = { state: nextState, cost: tentativeGScore, heuristic, f };
-          }
-        } else {
-
-          frontier.push({ state: nextState, cost: tentativeGScore, heuristic, f });
+        if (!explored.has(nextStateStr)) {
+          frontier.push({ 
+            state: nextState, 
+            cost: tentativeGScore,
+            heuristic: heuristic,
+            f: f
+          });
         }
       }
     }
   }
   
+  // No solution found
   return { path: [], nodesVisited };
 };

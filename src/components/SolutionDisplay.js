@@ -2,32 +2,29 @@ import React, { useState } from 'react';
 import './SolutionDisplay.css';
 import Board from './Board';
 
-const SolutionDisplay = ({ solution, board, vehicles, primaryPiece, exitPoint, onAnimate }) => {
+const SolutionDisplay = ({ solution, board, vehicles, primaryPiece, exitPoint, setIsAnimating }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimatingLocal, setIsAnimatingLocal] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState(500); 
-  
-  if (!solution || solution.length === 0) {
+    if (!solution || solution.length === 0) {
     return null;
   }
-
   const startAnimation = () => {
-    if (isAnimating) return;
+    if (isAnimatingLocal) return;
     
     setCurrentStepIndex(0);
+    setIsAnimatingLocal(true);
     setIsAnimating(true);
-    onAnimate(true);
 
     const animate = (index) => {
       if (index >= solution.length) {
+        setIsAnimatingLocal(false);
         setIsAnimating(false);
-        onAnimate(false);
         return;
       }
 
       setCurrentStepIndex(index);
-      
-      setTimeout(() => {
+        setTimeout(() => {
         animate(index + 1);
       }, animationSpeed);
     };
@@ -36,8 +33,8 @@ const SolutionDisplay = ({ solution, board, vehicles, primaryPiece, exitPoint, o
   };
 
   const stopAnimation = () => {
+    setIsAnimatingLocal(false);
     setIsAnimating(false);
-    onAnimate(false);
   };
 
   const handleSpeedChange = (e) => {
@@ -48,18 +45,16 @@ const SolutionDisplay = ({ solution, board, vehicles, primaryPiece, exitPoint, o
   
   return (
     <div className="solution-display">
-      <h2>Solution</h2>
-      
-      <div className="solution-info">
+      <h2>Solution</h2>      <div className="solution-info">
         <p>Total moves: {totalMoves}</p>
-        <p>Current move: {isAnimating ? currentStepIndex : 0} / {totalMoves}</p>
+        <p>Current move: {isAnimatingLocal ? currentStepIndex : 0} / {totalMoves}</p>
       </div>
       
       <div className="animation-controls">
         <button 
           className="animation-button"
           onClick={startAnimation}
-          disabled={isAnimating}
+          disabled={isAnimatingLocal}
         >
           Play Animation
         </button>
@@ -67,12 +62,11 @@ const SolutionDisplay = ({ solution, board, vehicles, primaryPiece, exitPoint, o
         <button 
           className="animation-button stop"
           onClick={stopAnimation}
-          disabled={!isAnimating}
+          disabled={!isAnimatingLocal}
         >
           Stop
         </button>
-        
-        <div className="speed-control">
+          <div className="speed-control">
           <span>Slow</span>
           <input
             type="range"
@@ -80,19 +74,17 @@ const SolutionDisplay = ({ solution, board, vehicles, primaryPiece, exitPoint, o
             max="900"
             value={1000 - animationSpeed}
             onChange={handleSpeedChange}
-            disabled={isAnimating}
+            disabled={isAnimatingLocal}
           />
           <span>Fast</span>
         </div>
-      </div>
-      
-      <div className="solution-board">
+      </div>        <div className="solution-board">
         <Board 
           board={board}
           vehicles={vehicles}
           primaryPiece={primaryPiece}
           exitPoint={exitPoint}
-          isAnimating={isAnimating}
+          isAnimating={isAnimatingLocal}
           currentStep={solution[currentStepIndex]}
         />
       </div>

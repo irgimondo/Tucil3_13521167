@@ -1,13 +1,37 @@
+
 import {
   boardToString,
   getPossibleMoves,
   isSolved,
   reconstructPath,
-  distanceToExit
+  distanceToExit,
+  countBlockingVehicles
 } from '../utils/boardUtils';
 
-export const solveWithGreedyBestFirst = (initialState) => {
-  const frontier = [{ state: initialState, heuristic: distanceToExit(initialState) }];
+import {
+  pathComplexity,
+  combinedHeuristic
+} from '../utils/heuristicFunctions';
+
+const calculateHeuristic = (state, heuristicType) => {
+  switch (heuristicType) {
+    case 'distance':
+      return distanceToExit(state);
+    case 'blocking':
+      return countBlockingVehicles(state);
+    case 'pathComplexity':
+      return pathComplexity(state);
+    case 'combined':
+    default:
+      return combinedHeuristic(state);
+  }
+};
+
+
+export const solveWithGreedyBestFirst = (initialState, heuristicType = 'combined') => {
+
+  const initialHeuristic = calculateHeuristic(initialState, heuristicType);
+  const frontier = [{ state: initialState, heuristic: initialHeuristic }];
   
   const explored = new Set();
   
@@ -29,6 +53,7 @@ export const solveWithGreedyBestFirst = (initialState) => {
       };
     }
     
+
     const stateStr = boardToString(state.board);
     
     if (explored.has(stateStr)) continue;
@@ -39,9 +64,8 @@ export const solveWithGreedyBestFirst = (initialState) => {
     
     for (const nextState of possibleMoves) {
       const nextStateStr = boardToString(nextState.board);
-      
       if (!explored.has(nextStateStr)) {
-        const heuristic = distanceToExit(nextState);
+        const heuristic = calculateHeuristic(nextState, heuristicType);
         
         frontier.push({ state: nextState, heuristic });
         
