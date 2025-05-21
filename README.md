@@ -14,14 +14,77 @@ Rush Hour is a sliding block puzzle game where the goal is to move a special veh
 
 - Upload puzzle configurations from text files
 - Select from three different pathfinding algorithms
+- Choose from multiple heuristic functions for informed searches
 - Visualize the solution with an animated board
 - Display performance metrics (execution time, nodes visited)
 - Step-by-step solution walkthrough
 
-## Heuristics
+## Algorithms Implemented
 
-- **Greedy Best First Search**: Distance of the primary piece to the exit
-- **A* Search**: Distance to exit + number of blocking vehicles
+### Uniform Cost Search (UCS)
+- Guarantees the shortest path solution
+- Treats all moves as having equal cost (1)
+- Explores states in order of path cost
+
+### Greedy Best First Search
+- Uses selectable heuristics to guide the search
+- Faster than UCS but doesn't guarantee shortest path
+- Always chooses the state that appears closest to the goal
+
+### A* Search
+- Combines UCS and Greedy Best First Search
+- Uses both path cost and heuristic: f(n) = g(n) + h(n)
+- Multiple heuristic options available
+- Guarantees shortest path if heuristic is admissible
+
+## Heuristic Functions
+
+The application provides several heuristic functions that can be selected by the user:
+
+### Distance to Exit
+- Measures how far the primary piece is from the exit
+- Simple but effective for many puzzles
+
+### Blocking Vehicles
+- Counts the number of vehicles blocking the path to the exit
+- Works well when the primary piece is already close to the exit
+
+### Combined (Distance + Blocking)
+- Combines distance and blocking vehicles count
+- Generally more effective than either heuristic alone
+
+### Path Complexity
+- Advanced heuristic that considers how difficult it is to clear the path
+- Accounts for both direct blockers and vehicles blocking those blockers
+- May provide better performance on complex puzzles
+
+## Project Structure
+
+```
+project-rush-hour/
+├── public/             # Public assets and test cases
+│   ├── index.html
+│   ├── manifest.json
+│   └── test_case_*.txt # Various test cases
+├── src/                # Source code
+│   ├── algorithms/     # Pathfinding algorithms
+│   │   ├── aStarSearch.js
+│   │   ├── greedyBestFirst.js
+│   │   └── uniformCostSearch.js
+│   ├── components/     # React components
+│   │   ├── Board.js
+│   │   ├── Controls.js
+│   │   ├── ParserTester.js
+│   │   ├── PuzzleInput.js
+│   │   └── SolutionDisplay.js
+│   ├── utils/          # Utility functions
+│   │   ├── boardUtils.js
+│   │   ├── heuristicFunctions.js
+│   │   └── puzzleParser.js
+│   ├── App.js          # Main application component
+│   └── index.js        # React entry point
+└── package.json        # Project dependencies
+```
 
 ## Setup Instructions
 
@@ -29,6 +92,58 @@ Rush Hour is a sliding block puzzle game where the goal is to move a special veh
 
 - Node.js (v14+)
 - npm or yarn
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/project-rush-hour.git
+cd project-rush-hour
+```
+
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Start the development server
+```bash
+npm start
+```
+
+4. Open your browser and navigate to `http://localhost:3000`
+
+## Input File Format
+
+The application accepts text files with the following format:
+
+```
+<rows> <cols>
+<number_of_vehicles>
+<primary_piece_identifier>
+<grid_row_1>
+<grid_row_2>
+...
+<grid_row_n>
+```
+
+Example:
+```
+6 6
+11
+K
+AAB..F
+..BCDF
+GPPCDF
+GH.III
+GHJ...
+LLJMM.
+```
+
+- First line: Board dimensions (rows and columns)
+- Second line: Number of vehicles on the board
+- Third line: Primary piece identifier (usually 'K')
+- Remaining lines: The grid representation
 
 ### Installation
 
@@ -99,35 +214,3 @@ This algorithm prioritizes states that appear closer to the goal based on a heur
 
 ### A* Search
 A* combines UCS and Greedy approaches by considering both the cost so far (moves made) and a heuristic estimate of the remaining cost, balancing optimality with efficiency.
-
-## Project Structure
-
-```
-rush-hour-solver/
-├── public/
-│   ├── index.html
-│   ├── manifest.json
-│   └── sample_test.txt
-├── src/
-│   ├── algorithms/
-│   │   ├── aStarSearch.js
-│   │   ├── greedyBestFirst.js
-│   │   └── uniformCostSearch.js
-│   ├── components/
-│   │   ├── Board.js
-│   │   ├── Board.css
-│   │   ├── Controls.js
-│   │   ├── Controls.css
-│   │   ├── PuzzleInput.js
-│   │   ├── PuzzleInput.css
-│   │   ├── SolutionDisplay.js
-│   │   └── SolutionDisplay.css
-│   ├── utils/
-│   │   ├── boardUtils.js
-│   │   └── inputParser.js
-│   ├── App.js
-│   ├── App.css
-│   ├── index.js
-│   └── index.css
-└── package.json
-```
