@@ -2,8 +2,7 @@
 9
 AABB..
 ..CC..
-PPDD..
+PPDD..K
 EE.FG.
 ...FG.
 ...HHH
-      K
