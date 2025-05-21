@@ -1,46 +1,66 @@
+
 import React from 'react';
 import './Board.css';
+
 
 const Board = ({ board, vehicles, primaryPiece, exitPoint, isAnimating, currentStep }) => {
   if (!board) return null;
 
-  // Function to get the piece at a specific position (row, col)
+
   const getPieceAt = (row, col) => {
-    // If we're animating and have a currentStep, use the board state from that step
     if (isAnimating && currentStep && currentStep.board) {
       return currentStep.board[row][col];
     }
     
-    // Otherwise use the current board state
     return board[row][col];
-  };
+  }; 
 
-  // Function to determine if a cell is the exit point
   const isExitCell = (row, col) => {
     if (!exitPoint) return false;
-    return row === exitPoint.row && col === exitPoint.col;
+    
+    if (row === exitPoint.row && col === exitPoint.col) {
+      return true;
+    }
+    
+    if (primaryPiece) {
+      if (exitPoint.col === board[0].length && col === board[0].length - 1 && 
+          row === exitPoint.row) {
+        return true;
+      }
+      
+      if (exitPoint.col === -1 && col === 0 && row === exitPoint.row) {
+        return true;
+      }
+      
+      if (exitPoint.row === board.length && row === board.length - 1 && 
+          col === exitPoint.col) {
+        return true;
+      }
+      
+      if (exitPoint.row === -1 && row === 0 && col === exitPoint.col) {
+        return true;
+      }
+    }
+    
+    return false;
   };
 
-  // Function to get class name for each cell
+
   const getCellClass = (cellValue, row, col) => {
     let classes = 'board-cell';
     
-    // Add class for exit point
     if (isExitCell(row, col)) {
       classes += ' exit-cell';
     }
     
-    // Empty cell
     if (cellValue === '.') {
       return classes + ' empty-cell';
     }
     
-    // Primary piece (target vehicle)
     if (cellValue === 'P') {
       return classes + ' primary-piece';
     }
     
-    // Regular vehicle pieces
     return classes + ` vehicle-piece vehicle-${cellValue.toLowerCase()}`;
   };
 

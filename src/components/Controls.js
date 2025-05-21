@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Controls.css';
 
-const Controls = ({ onAlgorithmChange, onSolve, selectedAlgorithm, disabled }) => {
+const Controls = ({ onAlgorithmChange, onHeuristicChange, onSolve, selectedAlgorithm, selectedHeuristic, disabled }) => {
   const handleAlgorithmChange = (e) => {
     onAlgorithmChange(e.target.value);
   };
+  
+  const handleHeuristicChange = (e) => {
+    onHeuristicChange(e.target.value);
+  };
+
+  const showHeuristicSelection = selectedAlgorithm === 'greedy' || selectedAlgorithm === 'astar';
 
   return (
     <div className="controls">
@@ -46,15 +52,69 @@ const Controls = ({ onAlgorithmChange, onSolve, selectedAlgorithm, disabled }) =
         </div>
       </div>
       
-      <div className="heuristic-info">
-        <h3>Heuristics Used</h3>
+      {showHeuristicSelection && (
+        <div className="heuristic-selection">
+          <h3>Select Heuristic</h3>
+          <div className="radio-group">
+            <label className="radio-label">
+              <input
+                type="radio"
+                value="distance"
+                checked={selectedHeuristic === 'distance'}
+                onChange={handleHeuristicChange}
+                disabled={disabled}
+              />
+              <span>Distance to Exit</span>
+            </label>
+            
+            <label className="radio-label">
+              <input
+                type="radio"
+                value="blocking"
+                checked={selectedHeuristic === 'blocking'}
+                onChange={handleHeuristicChange}
+                disabled={disabled}
+              />
+              <span>Blocking Vehicles</span>
+            </label>
+              <label className="radio-label">
+              <input
+                type="radio"
+                value="combined"
+                checked={selectedHeuristic === 'combined'}
+                onChange={handleHeuristicChange}
+                disabled={disabled}
+              />
+              <span>Combined (Distance + Blocking)</span>
+            </label>
+            
+            <label className="radio-label">
+              <input
+                type="radio"
+                value="pathComplexity"
+                checked={selectedHeuristic === 'pathComplexity'}
+                onChange={handleHeuristicChange}
+                disabled={disabled}
+              />
+              <span>Path Complexity</span>
+            </label>
+          </div>
+        </div>
+      )}
+        <div className="heuristic-info">
+        <h3>Heuristics Explanation</h3>
         <p>
-          <strong>Greedy Best First:</strong> Distance of primary piece to exit
+          <strong>Distance to Exit:</strong> Measures how far the primary piece is from the exit
         </p>
         <p>
-          <strong>A*:</strong> Distance to exit + number of blocking vehicles
+          <strong>Blocking Vehicles:</strong> Counts vehicles blocking the path to the exit
         </p>
-      </div>
+        <p>
+          <strong>Combined:</strong> Distance to exit + number of blocking vehicles
+        </p>
+        <p>
+          <strong>Path Complexity:</strong> Advanced heuristic that considers how difficult it is to clear blocking vehicles
+        </p>      </div>
 
       <button 
         className="solve-button" 
